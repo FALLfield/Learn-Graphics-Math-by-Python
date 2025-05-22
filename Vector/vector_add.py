@@ -3,7 +3,7 @@ import numpy as np
 
 # 初始化Taichi，设置为CPU架构
 # arch可以设置为ti.cpu或ti.gpu，取决于硬件支持
-ti.init(arch=ti.cpu)
+ti.init(arch=ti.gpu)
 
 # 定义屏幕分辨率
 res_x, res_y = 800, 800
@@ -30,10 +30,10 @@ def add_vectors():
     # 设置向量值
     vec1[None] = ti.Vector([2.0, 3.0])  # 向量1 [2, 3]
     vec2[None] = ti.Vector([3.0, 1.0])  # 向量2 [3, 1]
-    
+
     # 计算向量和: vec_sum = vec1 + vec2
     vec_sum[None] = vec1[None] + vec2[None]
-    
+
     # 设置变换后向量的起点
     transformed_vec1_origin[None] = ti.Vector([3.0, 1.0])
     transformed_vec2_origin[None] = ti.Vector([2.0, 3.0])
@@ -52,7 +52,7 @@ def draw_vector(canvas, origin_x, origin_y, vec_x, vec_y, color):
     start_x, start_y = world_to_screen(origin_x, origin_y)
     end_x, end_y = world_to_screen(origin_x + vec_x, origin_y + vec_y)
     canvas.line(ti.Vector([start_x, start_y]), ti.Vector([end_x, end_y]), color, 2.0)
-    
+
     # 绘制箭头
     arrow_length = 10.0
     arrow_width = 4.0
@@ -70,11 +70,11 @@ def draw_dashed_vector(canvas, origin_x, origin_y, vec_x, vec_y, color, dash_len
     # 获取屏幕坐标起点和终点
     start_x, start_y = world_to_screen(origin_x, origin_y)
     end_x, end_y = world_to_screen(origin_x + vec_x, origin_y + vec_y)
-    
+
     # 计算向量总长度和方向
     total_length = ti.sqrt((end_x - start_x)**2 + (end_y - start_y)**2)
     dir_x, dir_y = (end_x - start_x) / total_length, (end_y - start_y) / total_length
-    
+
     # 绘制虚线段
     num_segments = int(total_length / (dash_length * 2))
     for i in range(num_segments):
@@ -90,18 +90,18 @@ def draw_grid(canvas):
     # 绘制坐标轴
     x_axis_start_x, x_axis_start_y = world_to_screen(x_min, 0)
     x_axis_end_x, x_axis_end_y = world_to_screen(x_max, 0)
-    canvas.line(ti.Vector([x_axis_start_x, x_axis_start_y]), 
-                ti.Vector([x_axis_end_x, x_axis_end_y]), 
-                ti.Vector([0.5, 0.5, 0.5]), 
+    canvas.line(ti.Vector([x_axis_start_x, x_axis_start_y]),
+                ti.Vector([x_axis_end_x, x_axis_end_y]),
+                ti.Vector([0.5, 0.5, 0.5]),
                 1.0)
-    
+
     y_axis_start_x, y_axis_start_y = world_to_screen(0, y_min)
     y_axis_end_x, y_axis_end_y = world_to_screen(0, y_max)
-    canvas.line(ti.Vector([y_axis_start_x, y_axis_start_y]), 
-                ti.Vector([y_axis_end_x, y_axis_end_y]), 
-                ti.Vector([0.5, 0.5, 0.5]), 
+    canvas.line(ti.Vector([y_axis_start_x, y_axis_start_y]),
+                ti.Vector([y_axis_end_x, y_axis_end_y]),
+                ti.Vector([0.5, 0.5, 0.5]),
                 1.0)
-    
+
     # 绘制网格线
     grid_spacing = 1.0
     for i in range(int(x_min), int(x_max)+1):
@@ -109,19 +109,19 @@ def draw_grid(canvas):
             continue
         grid_x, grid_y_start = world_to_screen(i, y_min)
         grid_x, grid_y_end = world_to_screen(i, y_max)
-        canvas.line(ti.Vector([grid_x, grid_y_start]), 
-                    ti.Vector([grid_x, grid_y_end]), 
-                    ti.Vector([0.3, 0.3, 0.3]), 
+        canvas.line(ti.Vector([grid_x, grid_y_start]),
+                    ti.Vector([grid_x, grid_y_end]),
+                    ti.Vector([0.3, 0.3, 0.3]),
                     0.5)
-    
+
     for j in range(int(y_min), int(y_max)+1):
         if j == 0:  # 跳过坐标轴
             continue
         grid_x_start, grid_y = world_to_screen(x_min, j)
         grid_x_end, grid_y = world_to_screen(x_max, j)
-        canvas.line(ti.Vector([grid_x_start, grid_y]), 
-                    ti.Vector([grid_x_end, grid_y]), 
-                    ti.Vector([0.3, 0.3, 0.3]), 
+        canvas.line(ti.Vector([grid_x_start, grid_y]),
+                    ti.Vector([grid_x_end, grid_y]),
+                    ti.Vector([0.3, 0.3, 0.3]),
                     0.5)
 
 # 主要绘图函数
@@ -129,64 +129,64 @@ def draw_grid(canvas):
 def render(canvas: ti.template()):
     # 绘制网格和坐标轴
     draw_grid(canvas)
-    
+
     # 颜色定义
     red = ti.Vector([1.0, 0.0, 0.0])  # 向量1的颜色
     blue = ti.Vector([0.0, 0.0, 1.0])  # 向量2的颜色
     green = ti.Vector([0.0, 0.8, 0.0])  # 向量和的颜色
-    
+
     # 绘制原始向量
     draw_vector(canvas, 0, 0, vec1[None][0], vec1[None][1], red)
     draw_vector(canvas, 0, 0, vec2[None][0], vec2[None][1], blue)
-    
+
     # 绘制向量和
     draw_vector(canvas, 0, 0, vec_sum[None][0], vec_sum[None][1], green)
-    
+
     # 绘制移动后的向量
     # 向量1移动到向量2的终点
     draw_vector(canvas, vec2[None][0], vec2[None][1], vec1[None][0], vec1[None][1], red * 0.7)
-    
+
     # 向量2移动到向量1的终点
     draw_vector(canvas, vec1[None][0], vec1[None][1], vec2[None][0], vec2[None][1], blue * 0.7)
-    
+
     # 绘制从变换向量起点连接到原点的虚线
     draw_dashed_vector(canvas, 0, 0, transformed_vec1_origin[None][0], transformed_vec1_origin[None][1], red * 0.5, 5)
     draw_dashed_vector(canvas, 0, 0, transformed_vec2_origin[None][0], transformed_vec2_origin[None][1], blue * 0.5, 5)
-    
+
     # 绘制从变换向量起点到向量和终点的虚线
-    draw_dashed_vector(canvas, transformed_vec1_origin[None][0], transformed_vec1_origin[None][1], 
-                     vec_sum[None][0] - transformed_vec1_origin[None][0], 
+    draw_dashed_vector(canvas, transformed_vec1_origin[None][0], transformed_vec1_origin[None][1],
+                     vec_sum[None][0] - transformed_vec1_origin[None][0],
                      vec_sum[None][1] - transformed_vec1_origin[None][1], green * 0.7, 5)
-    
-    draw_dashed_vector(canvas, transformed_vec2_origin[None][0], transformed_vec2_origin[None][1], 
-                     vec_sum[None][0] - transformed_vec2_origin[None][0], 
+
+    draw_dashed_vector(canvas, transformed_vec2_origin[None][0], transformed_vec2_origin[None][1],
+                     vec_sum[None][0] - transformed_vec2_origin[None][0],
                      vec_sum[None][1] - transformed_vec2_origin[None][1], green * 0.7, 5)
 
 # 运行主程序
 def main():
     # 执行向量加法计算
     add_vectors()
-    
+
     # 创建Taichi GUI窗口
     window = ti.ui.Window("Vector Addition Visualization", (res_x, res_y))
     canvas = window.get_canvas()
-    
+
     # 获取向量结果（用于信息显示）
     v1 = np.array([vec1[None][0], vec1[None][1]])
     v2 = np.array([vec2[None][0], vec2[None][1]])
     v_sum = np.array([vec_sum[None][0], vec_sum[None][1]])
-    
+
     # 控制台输出
     print(f"Vector 1: [{v1[0]}, {v1[1]}]")
     print(f"Vector 2: [{v2[0]}, {v2[1]}]")
     print(f"Vector Sum: [{v_sum[0]}, {v_sum[1]}]")
-    
+
     # 主循环
     while window.running:
         # 渲染场景
         canvas.clear(ti.Vector([1.0, 1.0, 1.0]))  # 白色背景
         render(canvas)
-        
+
         # 添加文本信息
         window.GUI.begin("Vector Information", 0.01, 0.01, 0.3, 0.3)
         window.GUI.text(f"Vector 1: [{v1[0]:.1f}, {v1[1]:.1f}]")
@@ -195,10 +195,9 @@ def main():
         window.GUI.text("Vectors can be added graphically")
         window.GUI.text("by placing them head-to-tail")
         window.GUI.end()
-        
+
         # 显示帧
         window.show()
 
 if __name__ == "__main__":
     main()
-
